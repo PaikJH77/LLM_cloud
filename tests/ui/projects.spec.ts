@@ -1,0 +1,12 @@
+import {test,expect} from '@playwright/test';
+test.beforeEach(async({page})=>{await page.goto('/')});
+test('project-first navigation, IME, editing, archive, trash and restore',async({page})=>{
+ await expect(page.getByRole('heading',{name:'진행 중 프로젝트'})).toBeVisible();await page.getByRole('button',{name:'새 프로젝트',exact:true}).click();
+ const name=page.getByLabel('프로젝트 이름', {exact:true});await name.fill('  ');await page.getByRole('button',{name:'프로젝트 만들기'}).click();await expect(page.getByRole('heading',{name:'새 프로젝트'})).toBeVisible();
+ await name.dispatchEvent('compositionstart');await name.fill('한글');await name.press('Enter');await expect(page.getByRole('heading',{name:'새 프로젝트'})).toBeVisible();await name.dispatchEvent('compositionend');await name.fill('연구 일정');await page.getByRole('button',{name:'프로젝트 만들기'}).click();
+ await expect(page.getByRole('heading',{name:'연구 일정',exact:true})).toBeVisible();await expect(page.getByText('미산정 · 0/0 입력')).toBeVisible();
+ await page.getByRole('button',{name:'보관',exact:true}).click();await expect(page.getByText('보관된 프로젝트 · 읽기 전용')).toBeVisible();await expect(page.getByRole('button',{name:'작업 추가',exact:true})).toBeDisabled();await page.getByRole('button',{name:'보관 해제',exact:true}).click();
+ page.once('dialog',d=>{expect(d.message()).toContain('연구 일정');expect(d.message()).toContain('0');return d.accept()});await page.getByRole('button',{name:'프로젝트 삭제'}).click();await expect(page.getByText('삭제된 프로젝트 · 읽기 전용')).toBeVisible();await page.getByRole('button',{name:'프로젝트 복원'}).click();await page.getByRole('button',{name:'프로젝트 목록'}).click();await expect(page.getByRole('button',{name:/연구 일정/})).toBeVisible();
+ await page.getByLabel('프로젝트 검색').fill('없는이름');await expect(page.getByText('표시할 프로젝트가 없습니다')).toBeVisible();
+});
+test('shows null deadlines, progress completeness and locked state after disconnect',async({page})=>{await page.getByRole('button',{name:'새 프로젝트',exact:true}).click();await page.getByLabel('프로젝트 이름',{exact:true}).fill('미정 프로젝트');await page.getByRole('button',{name:'프로젝트 만들기'}).click();await page.getByRole('button',{name:'프로젝트 목록'}).click();await expect(page.getByText('마감 미정')).toBeVisible();await page.getByLabel('정렬').selectOption('deadlineAsc');await page.getByRole('button',{name:/미정 프로젝트/}).click();await page.evaluate(()=>(window as any).mockControls.offline(true));await page.getByRole('button',{name:'다시 연결 확인'}).click();await expect(page.getByText(/연결 끊김/).first()).toBeVisible();await expect(page.getByRole('button',{name:'작업 추가',exact:true})).toBeDisabled();});

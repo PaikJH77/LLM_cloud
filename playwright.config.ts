@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'tests',timeout:30000,fullyParallel:false,workers:1,reporter:'list',use:{headless:true,baseURL:'http://127.0.0.1:4317',launchOptions:{executablePath:process.env.CHROMIUM_PATH??'/usr/bin/chromium',args:['--no-sandbox']},screenshot:'only-on-failure'},projects:[{name:'ui',testMatch:'ui/**/*.spec.ts'},{name:'e2e',testMatch:'e2e/**/*.spec.ts'}],webServer:{command:'npm run dev:ui',url:'http://127.0.0.1:4317',reuseExistingServer:false,timeout:60000}});
