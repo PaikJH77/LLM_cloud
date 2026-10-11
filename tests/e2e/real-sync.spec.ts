@@ -286,7 +286,7 @@ test("real unprocessed network failure retries once and remote archive prevents 
 });
 test("protected draft survives forced client-process termination and requires same authenticated account", async () => {
   const { fork } = await import("node:child_process");
-  const { once } = await import("node:events");
+  const { once } = (await import("node:events")).default;
   const a = await client(),
     id = randomUUID();
   applied(
