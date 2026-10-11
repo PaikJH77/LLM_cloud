@@ -8,3 +8,11 @@
 
 ## 작업 1
 - RED: 새 web routing 테스트를 먼저 추가, 구현 모듈 부재 실패를 확인한다.
+
+## 작업 1–4 중간 결과
+- Routing RED(모듈 없음) → GREEN 1건. 웹 빌드·typecheck 통과, renderer 419 KiB webpack 권고 경고 있음.
+- PostgreSQL RED(모듈 없음) → GREEN. 인스턴스 pool 재사용, migration 재실행·checksum 검증. 독립 검토에서 partial unmanaged schema 등록 결함 발견, 전체 관리 테이블 존재 검사와 회귀 테스트로 수정.
+- Owner policy RED(모듈 없음) → GREEN. 실제 Keycloak의 허용 계정/타 계정, 변조 서명, 다른 audience, Origin/cookie 경계 확인.
+- 브라우저 IDB RED(모듈 없음) → GREEN. 암호문, 잘못된 키·계정, CAS 저장/삭제, 세션 무효화 검증. 서버 wrapped data key의 master rotation 및 키 손실 실패 확인.
+- 독립 검토에서 로그아웃의 화면 초기화 누락, SDK 만료 타이머 취소, API 401에서 메모리 키 유지 발견. 세션 종료 이벤트·SDK 메모리 user 유지·현재 epoch 401 logout으로 수정. 실제 브라우저 회귀 진행 중.
+- 실제 Chromium→Keycloak PKCE→Fastify→PostgreSQL 로그인/타 계정 거부 2건 통과. 운영 Auth0/Neon/Vercel 검증 아님.
