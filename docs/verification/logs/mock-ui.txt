@@ -1,0 +1,32 @@
+
+> personal-project-planner@0.1.0 test:ui
+> playwright test --project=ui
+
+[WebServer] (node:35255) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:35269) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:35280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] <i> [webpack-dev-server] Project is running at:
+[WebServer] <i> [webpack-dev-server] Loopback: http://127.0.0.1:4317/
+[WebServer] <i> [webpack-dev-server] Content not from webpack is served from '/workspace/LLM_cloud/public' directory
+[WebServer] <i> [webpack-dev-middleware] wait until bundle finished: /
+
+Running 6 tests using 1 worker
+
+(node:35315) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [ui] › tests/ui/gantt.spec.ts:16:1 › table dates, inclusive bars, move, resize and Escape share one calendar model (1.1s)
+  ✓  2 [ui] › tests/ui/gantt.spec.ts:67:1 › undated tasks have no bar, archive locks dates, day step works on weekly axis (792ms)
+  ✓  3 [ui] › tests/ui/gantt.spec.ts:88:1 › remote refresh cancels an active drag without overwriting newer dates (739ms)
+  ✓  4 [ui] › tests/ui/projects.spec.ts:5:1 › project-first navigation, IME, editing, archive, trash and restore (848ms)
+  ✓  5 [ui] › tests/ui/projects.spec.ts:50:1 › shows null deadlines, progress completeness and locked state after disconnect (588ms)
+  ✓  6 [ui] › tests/ui/projects.spec.ts:67:1 › invalid task draft cannot be overwritten by another editor and offline event locks immediately (659ms)
+
+  6 passed (7.8s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,31 @@
+❯ Checking your system
+❯ Checking package manager version
+✔ Found npm@11.9.0
+✔ Checking your system
+❯ Preparing to package application
+✔ Preparing to package application
+❯ Running packaging hooks
+❯ Running generateAssets hook
+✔ Running generateAssets hook
+❯ Running prePackage hook
+❯ [plugin-webpack] Preparing webpack bundles
+❯ Preparing native dependencies for x64
+✔ Preparing native dependencies
+❯ Building webpack bundles
+✔ Building webpack bundles
+✔ [plugin-webpack] Preparing webpack bundles
+✔ Running prePackage hook
+✔ Running packaging hooks
+❯ Packaging application
+› Determining targets...
+❯ Packaging for x64 on linux
+❯ Copying files
+✔ Copying files
+❯ Preparing native dependencies
+✔ Preparing native dependencies
+❯ Finalizing package
+✔ Finalizing package
+✔ Packaging for x64 on linux
+✔ Packaging application
+❯ Running postPackage hook
+✔ Running postPackage hook

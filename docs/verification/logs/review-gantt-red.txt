@@ -1,0 +1,58 @@
+
+> personal-project-planner@0.1.0 test:ui
+> playwright test --project=ui --grep remote refresh
+
+[WebServer] (node:34592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:34605) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:34616) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] <i> [webpack-dev-server] Project is running at:
+[WebServer] <i> [webpack-dev-server] Loopback: http://127.0.0.1:4317/
+[WebServer] <i> [webpack-dev-server] Content not from webpack is served from '/workspace/LLM_cloud/public' directory
+[WebServer] <i> [webpack-dev-middleware] wait until bundle finished: /
+
+Running 1 test using 1 worker
+
+(node:34649) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [ui] › tests/ui/gantt.spec.ts:88:1 › remote refresh cancels an active drag without overwriting newer dates (5.8s)
+
+
+  1) [ui] › tests/ui/gantt.spec.ts:88:1 › remote refresh cancels an active drag without overwriting newer dates
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('다른 PC에서 변경되어 드래그를 취소했습니다')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('다른 PC에서 변경되어 드래그를 취소했습니다') with timeout 5000ms
+      - waiting for getByText('다른 PC에서 변경되어 드래그를 취소했습니다')
+
+
+      101 |   await expect(page.getByLabel("실험 시작일", {exact:true})).toHaveValue("2028-03-10");
+      102 |   await page.mouse.up();
+    > 103 |   await expect(page.getByText("다른 PC에서 변경되어 드래그를 취소했습니다")).toBeVisible();
+          |                                                            ^
+      104 |   expect(await page.evaluate(() => (window as any).mockControls.requests())).toBe(before);
+      105 | });
+      106 |
+        at /workspace/LLM_cloud/tests/ui/gantt.spec.ts:103:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/ui-gantt-remote-refresh-ca-6b794-out-overwriting-newer-dates-ui/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/ui-gantt-remote-refresh-ca-6b794-out-overwriting-newer-dates-ui/error-context.md
+
+  1 failed
+    [ui] › tests/ui/gantt.spec.ts:88:1 › remote refresh cancels an active drag without overwriting newer dates
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

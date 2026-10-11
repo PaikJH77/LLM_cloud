@@ -1,0 +1,18 @@
+
+> personal-project-planner@0.1.0 test:unit
+> vitest run --project unit
+
+
+ RUN  v5.0.3 /workspace/LLM_cloud
+
+
+ Test Files  6 passed (6)
+      Tests  35 passed (35)
+   Start at  05:45:08
+   Duration  508ms (import 45%, tests 27%, transform 25%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

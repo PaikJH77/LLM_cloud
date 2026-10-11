@@ -1,0 +1,64 @@
+
+> personal-project-planner@0.1.0 test:unit
+> vitest run --project unit
+
+
+ RUN  v5.0.3 /workspace/LLM_cloud
+
+ ❯ |unit| tests/unit/sync-controller.test.ts (11 tests | 2 failed) 109ms
+   × never transmits a draft after protection failure during automatic refresh 11ms
+   × disposed conflict resolution cannot erase a replacement controller's draft 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |unit| tests/unit/sync-controller.test.ts > never transmits a draft after protection failure during automatic refresh
+AssertionError: expected [ { …(4) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/unit/sync-controller.test.ts:324:19
+    322|   await c.commit(op);
+    323|   await c.refresh();
+    324|   expect(f.calls).toHaveLength(0);
+       |                   ^
+    325|   expect(c.state.status).toBe("failed");
+    326|   c.dispose();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |unit| tests/unit/sync-controller.test.ts > disposed conflict resolution cannot erase a replacement controller's draft
+AssertionError: expected undefined to match object { name: 'new' }
+
+- Expected:
+{
+  "name": "new",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/sync-controller.test.ts:347:37
+    345|   release();
+    346|   await resolution;
+    347|   expect(f.drafts[0]?.editedFields).toMatchObject({name:"new"});
+       |                                     ^
+    348|   replacement.dispose();
+    349| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  2 failed | 33 passed (35)
+   Start at  05:44:37
+   Duration  595ms (import 42%, transform 28%, tests 27%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

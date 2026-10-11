@@ -1,0 +1,12 @@
+3350df0 docs: preserve approved planner design and implementation plan
+6fae40e feat: define planner domain contracts
+dede757 feat: add transactional project storage
+1fe9049 feat: enforce authenticated owner access
+8c93dec feat: protect desktop drafts and sessions
+8adbfc6 feat: coordinate safe online synchronization
+93eac2a feat: add project-first navigation and recovery
+7b87d01 feat: add editable task grid and gantt
+bab6bd3 test: verify real authenticated synchronization
+01f30f4 docs: record blocked Windows installer acceptance
+5edbd10 test: align process restart fixture with Node event types
+67d3fb4 fix: guard protected retries and stale client interactions

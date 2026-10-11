@@ -1,0 +1,32 @@
+
+> personal-project-planner@0.1.0 test:e2e
+> playwright test --project=e2e
+
+[WebServer] (node:36245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:36258) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:36269) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] <i> [webpack-dev-server] Project is running at:
+[WebServer] <i> [webpack-dev-server] Loopback: http://127.0.0.1:4317/
+[WebServer] <i> [webpack-dev-server] Content not from webpack is served from '/workspace/LLM_cloud/public' directory
+[WebServer] <i> [webpack-dev-middleware] wait until bundle finished: /
+
+Running 6 tests using 1 worker
+
+(node:36359) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [e2e] › tests/e2e/electron-smoke.spec.ts:3:1 › Electron starts with an isolated renderer and a limited bridge (552ms)
+  ✓  2 [e2e] › tests/e2e/real-sync.spec.ts:121:1 › real browser OIDC authorization code + PKCE login verifies state and nonce (920ms)
+  ✓  3 [e2e] › tests/e2e/real-sync.spec.ts:136:1 › two independent real service UI clients see committed changes; third owner cannot read (1.4s)
+  ✓  4 [e2e] › tests/e2e/real-sync.spec.ts:181:1 › real API conflict, lost response, protected restart recovery and API restart (265ms)
+  ✓  5 [e2e] › tests/e2e/real-sync.spec.ts:246:1 › real unprocessed network failure retries once and remote archive prevents stale reapply (228ms)
+  ✓  6 [e2e] › tests/e2e/real-sync.spec.ts:287:1 › protected draft survives forced client-process termination and requires same authenticated account (505ms)
+
+  6 passed (7.7s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
