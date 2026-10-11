@@ -36,6 +36,8 @@ function aad(
 export class BrowserDraftStore implements DraftStore {
   private selected = new Map<string, { id: string; revision: number }>();
   private pending: Promise<unknown> = Promise.resolve();
+  private lastFailure: unknown = null;
+  private owned = new Map<string, number>();
   private db: Promise<IDBDatabase>;
   constructor(private session: DraftSession) {
     this.db = new Promise((resolve, reject) => {
@@ -53,7 +55,14 @@ export class BrowserDraftStore implements DraftStore {
   }
   private serialize<T>(action: () => Promise<T>): Promise<T> {
     const p = this.pending.then(action);
-    this.pending = p.catch(() => {});
+    this.pending = p.then(
+      () => {
+        this.lastFailure = null;
+      },
+      (error) => {
+        this.lastFailure = error;
+      },
+    );
     return p;
   }
   async records() {
@@ -129,6 +138,7 @@ export class BrowserDraftStore implements DraftStore {
     if (!r) throw new Error("Draft missing");
     const draft = await this.decrypt(r);
     this.selected.set(r.projectId, { id: r.id, revision: r.revision });
+    this.owned.set(r.id, r.revision);
     return draft;
   }
   save(draft: Draft) {
@@ -160,6 +170,7 @@ export class BrowserDraftStore implements DraftStore {
       await this.change(r.id, old?.revision, (store) => store.put(r));
       this.check();
       this.selected.set(draft.projectId, { id: r.id, revision: r.revision });
+      this.owned.set(r.id, r.revision);
     });
   }
   remove(principalKey: string, projectId: string) {
@@ -169,6 +180,7 @@ export class BrowserDraftStore implements DraftStore {
       if (!old) return;
       await this.change(old.id, old.revision, (store) => store.delete(old.id));
       this.selected.delete(projectId);
+      this.owned.delete(old.id);
     });
   }
   private async change(
@@ -205,11 +217,24 @@ export class BrowserDraftStore implements DraftStore {
       };
     });
   }
-  async discardAll() {
-    await this.pending;
-    for (const r of await this.records()) {
-      await this.change(r.id, r.revision, (store) => store.delete(r.id));
+  async flush() {
+    this.check();
+    // A save queued while waiting must also finish before a user-requested logout.
+    for (;;) {
+      const pending = this.pending;
+      await pending;
+      if (pending === this.pending) break;
     }
-    this.selected.clear();
+    this.check();
+    if (this.lastFailure) throw this.lastFailure;
+  }
+  discardOwned() {
+    return this.serialize(async () => {
+      for (const [id, revision] of this.owned) {
+        await this.change(id, revision, (store) => store.delete(id));
+        this.owned.delete(id);
+      }
+      this.selected.clear();
+    });
   }
 }

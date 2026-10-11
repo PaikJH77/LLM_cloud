@@ -50,7 +50,7 @@ runner는 단일 transaction/lock, 순번 SQL checksum 이력, 기존 schema 형
 
 ## 보호된 초안과 복구
 
-IndexedDB에는 AES-GCM ciphertext와 routing metadata만 저장한다. AAD에는 출처·환경·issuer/subject·project·draft ID·revision·key version이 결합된다. 서버는 소유자별 data key를 master key로 감싸 PostgreSQL에 저장한다. 로그인 후 해당 키를 nonextractable WebCrypto key로 가져와 메모리에서만 사용한다. 다른 탭의 새 revision을 덮어쓰거나 삭제하면 오류로 잠긴다. 이전 탭의 변경안은 로그인 후 상단 복구 선택과 목록의 `복구:` 버튼으로 연다.
+IndexedDB에는 AES-GCM ciphertext와 routing metadata만 저장한다. AAD에는 출처·환경·issuer/subject·project·draft ID·revision·key version이 결합된다. 서버는 소유자별 data key를 master key로 감싸 PostgreSQL에 저장한다. 로그인 후 해당 키를 nonextractable WebCrypto key로 가져와 메모리에서만 사용한다. 다른 탭의 새 revision을 덮어쓰거나 삭제하면 오류로 잠긴다. 이전 탭의 변경안은 로그인 후 상단 복구 선택과 목록의 `복구:` 버튼으로 연다. 보존 로그아웃은 대기 중인 보호 저장 성공까지 기다리고 실패하면 로그인 상태를 유지한다. 폐기 로그아웃은 이 탭에서 저장하거나 명시적으로 복구 선택한 초안만 해당 revision으로 삭제한다. 다른 탭의 초안은 남는다.
 
 Master 회전은 기존/새 master를 함께 제공하고 `active`를 새 버전으로 바꿔 진행한다. 소유자 키 조회 시 같은 data key를 새 master로 다시 감싼다. 모든 필요한 row가 새 master로 전환되고 백업 복구 조건을 검증하기 전 구 master를 제거하지 않는다. **운영 master는 이번 작업에서 생성·설정하지 않았다.**
 

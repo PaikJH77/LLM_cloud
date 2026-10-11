@@ -155,3 +155,46 @@ test("cross-tab logout immediately removes projects and recovered plaintext", as
   ).toBeVisible();
   await expect(page.getByRole("heading", { name, exact: true })).toHaveCount(0);
 });
+test("discard logout deletes only this tab's draft and preserves the other tab for re-login", async ({
+  page,
+  context,
+}) => {
+  await login(page);
+  const nameA = "Discard A " + randomUUID();
+  await createProject(page, nameA);
+  await page.getByRole("button", { name: "작업 추가", exact: true }).click();
+  await page.getByLabel("새 작업 이름").fill("A unsent");
+  const next = await context.newPage();
+  await login(next);
+  const nameB = "Preserve B " + randomUUID();
+  await createProject(next, nameB);
+  await next.getByRole("button", { name: "작업 추가", exact: true }).click();
+  await next.getByLabel("새 작업 이름").fill("B protected unsent");
+  await expect
+    .poll(() =>
+      next.evaluate(async () => {
+        const p = await window.planner.session();
+        return (
+          await window.planner.drafts.load(
+            JSON.stringify([p!.issuer, p!.subject]),
+          )
+        ).length;
+      }),
+    )
+    .toBe(2);
+  await page.getByRole("button", { name: "로그아웃", exact: true }).click();
+  await page.getByRole("button", { name: "폐기하고 로그아웃" }).click();
+  await expect(
+    next.getByRole("button", { name: "로그인", exact: true }),
+  ).toBeVisible();
+  await login(next);
+  await expect(
+    next.getByRole("button", { name: "복구: " + nameA, exact: true }),
+  ).toHaveCount(0);
+  await next
+    .getByRole("button", { name: "복구: " + nameB, exact: true })
+    .click();
+  await expect(next.getByLabel("새 작업 이름")).toHaveValue(
+    "B protected unsent",
+  );
+});

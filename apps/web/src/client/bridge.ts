@@ -84,7 +84,8 @@ export async function createWebBridge(
     drafts,
     recovery: () => store,
     logout: async (choice) => {
-      if (choice === "discard" && store) await store.discardAll();
+      if (choice === "discard" && store) await store.discardOwned();
+      if (choice === "keep" && store) await store.flush();
       await auth.logout();
     },
   };

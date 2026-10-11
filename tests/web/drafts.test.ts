@@ -101,3 +101,43 @@ it("quota failures cannot bypass protected-before-send on controller retry", asy
     controller.dispose();
   }
 });
+it("discard logout preserves other tabs' unsent drafts even after listing them", async () => {
+  const s = await session(),
+    a = new BrowserDraftStore(s),
+    b = new BrowserDraftStore(s);
+  await a.save({ ...draft, projectId: "tab-a" });
+  await b.save({
+    ...draft,
+    projectId: "tab-b",
+    editedFields: { kind: "project", name: "other tab unsent", deadline: "" },
+  });
+  await a.load("account");
+  await a.discardOwned();
+  const fresh = new BrowserDraftStore(s);
+  expect((await fresh.load("account")).map((d) => d.projectId)).toEqual([
+    "tab-b",
+  ]);
+});
+it("rejects actual ciphertext, IV and revision-AAD tampering", async () => {
+  for (const field of ["ciphertext", "iv", "revision"] as const) {
+    const s = await session(),
+      store = new BrowserDraftStore(s);
+    await store.save(draft);
+    const record = (await store.records())[0];
+    if (field === "revision") record.revision++;
+    else record[field][0] ^= 1;
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open("planner-protected-drafts", 1);
+      open.onsuccess = () => {
+        const tx = open.result.transaction("drafts", "readwrite");
+        tx.objectStore("drafts").put(record);
+        tx.oncomplete = () => {
+          open.result.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+    });
+    await expect(new BrowserDraftStore(s).load("account")).rejects.toThrow();
+  }
+});
