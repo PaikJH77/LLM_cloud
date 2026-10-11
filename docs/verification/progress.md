@@ -14,3 +14,5 @@ Approved source snapshots are stored unchanged. Repository baseline: 1b4e8c7; no
 ## Status
 1. In progress: domain contracts and calculations.
 2–9. Pending.
+
+Task 1: complete. RED: domain imports absent (plan-specified missing implementation); GREEN: 16 tests in UTC, Asia/Seoul and America/Los_Angeles. `npm run typecheck` passed. Node 24.19.0 LTS; resolved dependency versions captured in lockfile. See /tmp/planner-domain-*.log in this session.
