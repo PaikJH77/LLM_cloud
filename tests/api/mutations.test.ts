@@ -30,3 +30,9 @@ it('rejects creation at a nonzero base and returns coherent snapshots during wri
  const writes=(async()=>{for(let v=2;v<25;v++)await applyCommand(db,owner,command(s.project.id,v,{type:'updateTask',taskId,fields:{name:String(v+1),start:null,end:null,progress:0}}))})();
  try {for(let i=0;i<50;i++){const read=await getSnapshot(db,owner,s.project.id);expect(Number(read.tasks[0].name)).toBe(read.project.version)}}finally{await writes;}
 });
+it('never overwrites another project task on simultaneous global task-id collision',async()=>{
+ const {s:a}=await create('owner-a');const b=applied(await applyCommand(db,other,command(randomUUID(),0,{type:'createProject',fields:{name:'owner-b',deadline:null}})));const id=randomUUID();
+ const delayed={connect:async()=>{const c=await db.connect();return new Proxy(c,{get(target,key){if(key==='query')return async(...args:any[])=>{const r=await (target.query as any)(...args);if(String(args[0]).startsWith('SELECT id FROM tasks'))await new Promise(resolve=>setTimeout(resolve,50));return r;};const v=(target as any)[key];return typeof v==='function'?v.bind(target):v;}})}} as Pool;
+ const r=await Promise.all([[owner,a],[other,b]].map(async([p,s]:any)=>applyCommand(delayed,p,command(s.project.id,1,{type:'createTask',taskId:id,fields:{name:p.ownerId,start:null,end:null,progress:0}}))));
+ expect(r.filter(x=>x.kind==='applied')).toHaveLength(1);for(const [p,s] of [[owner,a],[other,b]] as const){const snap=await getSnapshot(db,p,s.project.id);for(const t of snap.tasks){expect(t.projectId).toBe(s.project.id);expect(t.name).toBe(p.ownerId);}}
+});
