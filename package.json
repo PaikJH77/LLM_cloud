@@ -21,7 +21,9 @@
     "build:web": "tsx scripts/build-web.ts",
     "test:web:unit": "vitest run --project web",
     "dev:web": "tsx src/server.ts",
-    "migrate:web": "tsx scripts/migrate.ts"
+    "migrate:web": "tsx scripts/migrate.ts",
+    "test:web:ui": "playwright test -c playwright.web.config.ts",
+    "dev:web:test": "tsx tests/support/web-real-server.ts"
   },
   "dependencies": {
     "@fastify/static": "10.1.6",

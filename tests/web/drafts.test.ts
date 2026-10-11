@@ -59,3 +59,45 @@ it("session invalidation refuses late persistence", async () => {
   await expect(a.save(draft)).rejects.toThrow();
   await expect(a.load("account")).rejects.toThrow();
 });
+it("quota failures cannot bypass protected-before-send on controller retry", async () => {
+  const { createSyncController } =
+    await import("../../apps/desktop/src/renderer/sync/controller");
+  const { owner } = await import("../support/fixtures");
+  const { principalKey } = await import("../../packages/core/src/contracts");
+  const s = await session(),
+    store = new BrowserDraftStore({ ...s, principalKey: principalKey(owner) });
+  let sent = 0;
+  const controller = createSyncController(
+    {
+      listProjects: async () => [],
+      getProject: async () => {
+        throw new Error("not created");
+      },
+      requestStatus: async () => null,
+      mutate: async () => {
+        sent++;
+        throw new Error("must not send");
+      },
+    },
+    store,
+    { now: () => new Date(), setInterval: () => 0, clearInterval: () => {} },
+    owner,
+  );
+  await controller.openNew(crypto.randomUUID());
+  const original = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function () {
+    throw new DOMException("Quota", "QuotaExceededError");
+  };
+  try {
+    await controller.commit({
+      type: "createProject",
+      fields: { name: "protected", deadline: null },
+    });
+    expect(controller.state.status).toBe("failed");
+    await controller.refresh();
+    expect(sent).toBe(0);
+  } finally {
+    IDBObjectStore.prototype.put = original;
+    controller.dispose();
+  }
+});

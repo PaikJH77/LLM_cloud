@@ -64,14 +64,10 @@ export async function createWebServer(config: WebConfig) {
         try {
           req.principal = await config.authenticate(bearer.slice(7));
         } catch (e) {
-          return reply
-            .code(e instanceof AuthenticationError ? 401 : 503)
-            .send({
-              error:
-                e instanceof AuthenticationError
-                  ? "UNAUTHORIZED"
-                  : "UNAVAILABLE",
-            });
+          return reply.code(e instanceof AuthenticationError ? 401 : 503).send({
+            error:
+              e instanceof AuthenticationError ? "UNAUTHORIZED" : "UNAVAILABLE",
+          });
         }
       });
       api.setErrorHandler((error, _req, reply) => {

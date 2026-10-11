@@ -49,6 +49,7 @@ export class WebAuth {
       url = location.href;
     // Remove credentials from history even when validation fails.
     history.replaceState(null, "", location.origin + "/");
+    await this.manager.clearStaleState();
     const user = await this.manager.signinRedirectCallback(url);
     if (this.epoch !== epoch) throw new Error("Session changed during login");
     if (!user.access_token || !user.expires_at)

@@ -1,5 +1,10 @@
 {
- "$schema": "https://openapi.vercel.sh/vercel.json",
- "buildCommand": "npm run build:web",
- "functions": {"src/server.ts": {"includeFiles": "dist/web/**"}}
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:web",
+  "functions": {
+    "src/server.ts": {
+      "includeFiles": "dist/web/**"
+    }
+  },
+  "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci"
 }
