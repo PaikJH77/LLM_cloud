@@ -1,7 +1,127 @@
-import {useEffect,useState} from 'react';import type {Principal} from '../../../../packages/core/src/model';import '../bridge';import {ProjectList} from './projects/ProjectList';import {ProjectDetail} from './projects/ProjectDetail';
-export function App(){const bridge=window.planner;const [principal,setPrincipal]=useState<Principal|null>(null),[ready,setReady]=useState(false),[error,setError]=useState(''),[protection,setProtection]=useState(false),[selected,setSelected]=useState<{id:string;isNew:boolean}|null>(null),[logout,setLogout]=useState(false),[busy,setBusy]=useState(false);
- useEffect(()=>{Promise.all([bridge.session(),bridge.protection()]).then(([p,s])=>{setPrincipal(p);setProtection(s)}).catch(e=>setError(e.message)).finally(()=>setReady(true))},[bridge]);
- const login=async()=>{setBusy(true);setError('');try{setPrincipal(await bridge.login());setProtection(await bridge.protection());}catch(e){setError((e as Error).message)}finally{setBusy(false)}};
- const leave=async(choice:'keep'|'discard')=>{try{await bridge.logout(choice);setSelected(null);setPrincipal(null);setLogout(false)}catch(e){setError((e as Error).message)}};
- return <div className="app"><header className="appbar"><div className="brand">▦ <span>PROJECT PLANNER<small>개인 프로젝트와 일정</small></span></div>{principal&&<button onClick={()=>setLogout(true)}>로그아웃</button>}</header>{error&&<div role="alert" className="error">{error}</div>}{!ready?<p>연결 확인 중…</p>:!principal?<main className="login card"><span className="eyebrow">나의 작업 공간</span><h1>프로젝트의 흐름을 한눈에</h1><p>개인 계정으로 로그인하여 여러 PC에서 같은 일정을 관리하세요.</p><button className="primary" disabled={busy} onClick={()=>void login()}>{busy?'로그인 중…':'로그인'}</button></main>:<>{!protection&&<div role="alert" className="error">보호 저장소를 사용할 수 없어 편집이 잠겼습니다.</div>}{selected?<ProjectDetail key={selected.id} projectId={selected.id} isNew={selected.isNew} principal={principal} gateway={bridge} protectedStorage={protection} onBack={()=>setSelected(null)} onExpired={()=>{setSelected(null);setPrincipal(null)}}/>:<ProjectList gateway={bridge} protectedStorage={protection} onSelect={(id,isNew=false)=>setSelected({id,isNew})} onExpired={()=>setPrincipal(null)}/>}</>}{logout&&<div className="modal"><section role="dialog" aria-label="로그아웃 확인" className="card"><h2>미저장 변경안을 어떻게 할까요?</h2><p>보존한 변경안은 같은 계정으로 다시 로그인한 후 복구합니다.</p><button onClick={()=>void leave('keep')}>보존하고 로그아웃</button><button onClick={()=>void leave('discard')}>폐기하고 로그아웃</button><button onClick={()=>setLogout(false)}>취소</button></section></div>}</div>;
+import { useEffect, useState } from "react";
+import type { Principal } from "../../../../packages/core/src/model";
+import "../bridge";
+import { ProjectList } from "./projects/ProjectList";
+import { ProjectDetail } from "./projects/ProjectDetail";
+export function App() {
+  const bridge = window.planner;
+  const [principal, setPrincipal] = useState<Principal | null>(null),
+    [ready, setReady] = useState(false),
+    [error, setError] = useState(""),
+    [protection, setProtection] = useState(false),
+    [selected, setSelected] = useState<{ id: string; isNew: boolean } | null>(
+      null,
+    ),
+    [logout, setLogout] = useState(false),
+    [busy, setBusy] = useState(false);
+  useEffect(() => {
+    Promise.all([bridge.session(), bridge.protection()])
+      .then(([p, s]) => {
+        setPrincipal(p);
+        setProtection(s);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setReady(true));
+  }, [bridge]);
+  const login = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      setPrincipal(await bridge.login());
+      setProtection(await bridge.protection());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const leave = async (choice: "keep" | "discard") => {
+    try {
+      await bridge.logout(choice);
+      setSelected(null);
+      setPrincipal(null);
+      setLogout(false);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  return (
+    <div className="app">
+      <header className="appbar">
+        <div className="brand">
+          ▦{" "}
+          <span>
+            PROJECT PLANNER<small>개인 프로젝트와 일정</small>
+          </span>
+        </div>
+        {principal && <button onClick={() => setLogout(true)}>로그아웃</button>}
+      </header>
+      {error && (
+        <div role="alert" className="error">
+          {error}
+        </div>
+      )}
+      {!ready ? (
+        <p>연결 확인 중…</p>
+      ) : !principal ? (
+        <main className="login card">
+          <span className="eyebrow">나의 작업 공간</span>
+          <h1>프로젝트의 흐름을 한눈에</h1>
+          <p>개인 계정으로 로그인하여 여러 PC에서 같은 일정을 관리하세요.</p>
+          <button
+            className="primary"
+            disabled={busy}
+            onClick={() => void login()}
+          >
+            {busy ? "로그인 중…" : "로그인"}
+          </button>
+        </main>
+      ) : (
+        <>
+          {!protection && (
+            <div role="alert" className="error">
+              보호 저장소를 사용할 수 없어 편집이 잠겼습니다.
+            </div>
+          )}
+          {selected ? (
+            <ProjectDetail
+              key={selected.id}
+              projectId={selected.id}
+              isNew={selected.isNew}
+              principal={principal}
+              gateway={bridge}
+              protectedStorage={protection}
+              onBack={() => setSelected(null)}
+              onExpired={() => {
+                setSelected(null);
+                setPrincipal(null);
+              }}
+            />
+          ) : (
+            <ProjectList
+              gateway={bridge}
+              protectedStorage={protection}
+              onSelect={(id, isNew = false) => setSelected({ id, isNew })}
+              onExpired={() => setPrincipal(null)}
+            />
+          )}
+        </>
+      )}
+      {logout && (
+        <div className="modal">
+          <section role="dialog" aria-label="로그아웃 확인" className="card">
+            <h2>미저장 변경안을 어떻게 할까요?</h2>
+            <p>보존한 변경안은 같은 계정으로 다시 로그인한 후 복구합니다.</p>
+            <button onClick={() => void leave("keep")}>
+              보존하고 로그아웃
+            </button>
+            <button onClick={() => void leave("discard")}>
+              폐기하고 로그아웃
+            </button>
+            <button onClick={() => setLogout(false)}>취소</button>
+          </section>
+        </div>
+      )}
+    </div>
+  );
 }

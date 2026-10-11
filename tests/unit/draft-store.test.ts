@@ -1,8 +1,134 @@
-import {it,expect} from 'vitest';import {mkdtemp,readFile,readdir,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {randomUUID,createCipheriv,createDecipheriv,randomBytes} from 'node:crypto';
-import {ProtectedDraftStore} from '../../apps/desktop/src/main/draft-store';import {validateCaller,validateCall} from '../../apps/desktop/src/main/ipc-policy';import type {Draft} from '../../packages/core/src/model';
-const key=randomBytes(32);const cipher={available:()=>true,encrypt:(text:string)=>{const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',key,iv),data=Buffer.concat([c.update(text,'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),data])},decrypt:(data:Buffer)=>{const c=createDecipheriv('aes-256-gcm',key,data.subarray(0,12));c.setAuthTag(data.subarray(12,28));return Buffer.concat([c.update(data.subarray(28)),c.final()]).toString('utf8')}};
-const draft=(name='secret'):Draft=>({principalKey:'["issuer","alice"]',projectId:randomUUID(),base:null,editedFields:{kind:'project',name,deadline:''},command:null,phase:'editing',savedLocallyAt:new Date().toISOString()});
-it('encrypts on disk and survives restart only for same account',async()=>{const root=await mkdtemp(join(tmpdir(),'planner-'));try{const a=new ProtectedDraftStore(root,cipher),d=draft();await a.save(d);const b=new ProtectedDraftStore(root,cipher);expect(await b.load(d.principalKey)).toEqual([d]);expect(await b.load('["issuer","bob"]')).toEqual([]);const folder=join(root,(await readdir(root))[0]);const data=await readFile(join(folder,(await readdir(folder))[0]));expect(data.includes(Buffer.from('secret'))).toBe(false);await b.remove(d.principalKey,d.projectId);expect(await b.load(d.principalKey)).toEqual([]);}finally{await rm(root,{recursive:true,force:true})}});
-it('serializes drafts and never writes plaintext when protection fails',async()=>{const root=await mkdtemp(join(tmpdir(),'planner-'));try{const store=new ProtectedDraftStore(root,cipher),a=draft();await Promise.all([store.save(a),store.save({...a,editedFields:{kind:'project',name:'last',deadline:''}})]);expect((await store.load(a.principalKey))[0].editedFields).toMatchObject({name:'last'});const unavailable=new ProtectedDraftStore(root,{...cipher,available:()=>false});await expect(unavailable.save(draft('must-not-write'))).rejects.toThrow('보호');await expect(unavailable.load(a.principalKey)).rejects.toThrow('보호');}finally{await rm(root,{recursive:true,force:true})}});
-it('rejects corrupt encrypted drafts visibly',async()=>{const root=await mkdtemp(join(tmpdir(),'planner-'));try{const s=new ProtectedDraftStore(root,cipher),d=draft();await s.save(d);await expect(new ProtectedDraftStore(root,{...cipher,decrypt:()=>{throw new Error('damaged')}}).load(d.principalKey)).rejects.toThrow();}finally{await rm(root,{recursive:true,force:true})}});
-it('rejects external frames, wrong windows and arbitrary IPC methods',()=>{expect(()=>validateCaller({senderId:1,expectedId:1,isMainFrame:true,url:'file:///app/index.html',expectedUrl:'file:///app/index.html'})).not.toThrow();for(const patch of [{senderId:2},{isMainFrame:false},{url:'https://attacker.test/'}])expect(()=>validateCaller({senderId:1,expectedId:1,isMainFrame:true,url:'file:///app/index.html',expectedUrl:'file:///app/index.html',...patch})).toThrow();expect(()=>validateCall('readFile','/etc/passwd')).toThrow();expect(()=>validateCall('getProject','../secret')).toThrow();expect(()=>validateCall('logout','anything')).toThrow()});
+import { it, expect } from "vitest";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  randomUUID,
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+} from "node:crypto";
+import { ProtectedDraftStore } from "../../apps/desktop/src/main/draft-store";
+import {
+  validateCaller,
+  validateCall,
+} from "../../apps/desktop/src/main/ipc-policy";
+import type { Draft } from "../../packages/core/src/model";
+const key = randomBytes(32);
+const cipher = {
+  available: () => true,
+  encrypt: (text: string) => {
+    const iv = randomBytes(12),
+      c = createCipheriv("aes-256-gcm", key, iv),
+      data = Buffer.concat([c.update(text, "utf8"), c.final()]);
+    return Buffer.concat([iv, c.getAuthTag(), data]);
+  },
+  decrypt: (data: Buffer) => {
+    const c = createDecipheriv("aes-256-gcm", key, data.subarray(0, 12));
+    c.setAuthTag(data.subarray(12, 28));
+    return Buffer.concat([c.update(data.subarray(28)), c.final()]).toString(
+      "utf8",
+    );
+  },
+};
+const draft = (name = "secret"): Draft => ({
+  principalKey: '["issuer","alice"]',
+  projectId: randomUUID(),
+  base: null,
+  editedFields: { kind: "project", name, deadline: "" },
+  command: null,
+  phase: "editing",
+  savedLocallyAt: new Date().toISOString(),
+});
+it("encrypts on disk and survives restart only for same account", async () => {
+  const root = await mkdtemp(join(tmpdir(), "planner-"));
+  try {
+    const a = new ProtectedDraftStore(root, cipher),
+      d = draft();
+    await a.save(d);
+    const b = new ProtectedDraftStore(root, cipher);
+    expect(await b.load(d.principalKey)).toEqual([d]);
+    expect(await b.load('["issuer","bob"]')).toEqual([]);
+    const folder = join(root, (await readdir(root))[0]);
+    const data = await readFile(join(folder, (await readdir(folder))[0]));
+    expect(data.includes(Buffer.from("secret"))).toBe(false);
+    await b.remove(d.principalKey, d.projectId);
+    expect(await b.load(d.principalKey)).toEqual([]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+it("serializes drafts and never writes plaintext when protection fails", async () => {
+  const root = await mkdtemp(join(tmpdir(), "planner-"));
+  try {
+    const store = new ProtectedDraftStore(root, cipher),
+      a = draft();
+    await Promise.all([
+      store.save(a),
+      store.save({
+        ...a,
+        editedFields: { kind: "project", name: "last", deadline: "" },
+      }),
+    ]);
+    expect((await store.load(a.principalKey))[0].editedFields).toMatchObject({
+      name: "last",
+    });
+    const unavailable = new ProtectedDraftStore(root, {
+      ...cipher,
+      available: () => false,
+    });
+    await expect(unavailable.save(draft("must-not-write"))).rejects.toThrow(
+      "보호",
+    );
+    await expect(unavailable.load(a.principalKey)).rejects.toThrow("보호");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+it("rejects corrupt encrypted drafts visibly", async () => {
+  const root = await mkdtemp(join(tmpdir(), "planner-"));
+  try {
+    const s = new ProtectedDraftStore(root, cipher),
+      d = draft();
+    await s.save(d);
+    await expect(
+      new ProtectedDraftStore(root, {
+        ...cipher,
+        decrypt: () => {
+          throw new Error("damaged");
+        },
+      }).load(d.principalKey),
+    ).rejects.toThrow();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+it("rejects external frames, wrong windows and arbitrary IPC methods", () => {
+  expect(() =>
+    validateCaller({
+      senderId: 1,
+      expectedId: 1,
+      isMainFrame: true,
+      url: "file:///app/index.html",
+      expectedUrl: "file:///app/index.html",
+    }),
+  ).not.toThrow();
+  for (const patch of [
+    { senderId: 2 },
+    { isMainFrame: false },
+    { url: "https://attacker.test/" },
+  ])
+    expect(() =>
+      validateCaller({
+        senderId: 1,
+        expectedId: 1,
+        isMainFrame: true,
+        url: "file:///app/index.html",
+        expectedUrl: "file:///app/index.html",
+        ...patch,
+      }),
+    ).toThrow();
+  expect(() => validateCall("readFile", "/etc/passwd")).toThrow();
+  expect(() => validateCall("getProject", "../secret")).toThrow();
+  expect(() => validateCall("logout", "anything")).toThrow();
+});

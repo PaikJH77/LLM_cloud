@@ -1,2 +1,36 @@
-import type {Snapshot,Operation} from '../../../../../packages/core/src/model';
-export function TrashView({snapshot,onCommit,disabled}:{snapshot:Snapshot;onCommit:(op:Operation)=>Promise<void>;disabled:boolean}){return <details className="task-trash"><summary>작업 휴지통 ({snapshot.tasks.filter(t=>t.deletedAt).length})</summary>{snapshot.tasks.filter(t=>t.deletedAt).map(t=><div key={t.id}>{t.name}<button disabled={disabled} onClick={()=>void onCommit({type:'restoreTask',taskId:t.id})}>작업 복원: {t.name}</button></div>)}</details>}
+import type {
+  Snapshot,
+  Operation,
+} from "../../../../../packages/core/src/model";
+export function TrashView({
+  snapshot,
+  onCommit,
+  disabled,
+}: {
+  snapshot: Snapshot;
+  onCommit: (op: Operation) => Promise<void>;
+  disabled: boolean;
+}) {
+  return (
+    <details className="task-trash">
+      <summary>
+        작업 휴지통 ({snapshot.tasks.filter((t) => t.deletedAt).length})
+      </summary>
+      {snapshot.tasks
+        .filter((t) => t.deletedAt)
+        .map((t) => (
+          <div key={t.id}>
+            {t.name}
+            <button
+              disabled={disabled}
+              onClick={() =>
+                void onCommit({ type: "restoreTask", taskId: t.id })
+              }
+            >
+              작업 복원: {t.name}
+            </button>
+          </div>
+        ))}
+    </details>
+  );
+}

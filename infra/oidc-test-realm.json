@@ -1,6 +1,64 @@
 {
- "realm":"planner-test","enabled":true,"sslRequired":"none",
- "accessTokenLifespan":60,
- "clients":[{"clientId":"planner-desktop","enabled":true,"publicClient":true,"standardFlowEnabled":true,"directAccessGrantsEnabled":true,"redirectUris":["http://127.0.0.1:*/*"],"webOrigins":[],"attributes":{"pkce.code.challenge.method":"S256"},"protocolMappers":[{"name":"api audience","protocol":"openid-connect","protocolMapper":"oidc-audience-mapper","config":{"included.custom.audience":"planner-api","access.token.claim":"true","id.token.claim":"false"}}]}],
- "users":[{"username":"alice","enabled":true,"email":"alice@example.test","emailVerified":true,"firstName":"Alice","lastName":"Test","credentials":[{"type":"password","value":"test-only-alice","temporary":false}]},{"username":"bob","enabled":true,"email":"bob@example.test","emailVerified":true,"firstName":"Bob","lastName":"Test","credentials":[{"type":"password","value":"test-only-bob","temporary":false}]}]
+  "realm": "planner-test",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 60,
+  "clients": [
+    {
+      "clientId": "planner-desktop",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://127.0.0.1:*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "planner-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.test",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test-only-alice",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "email": "bob@example.test",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test-only-bob",
+          "temporary": false
+        }
+      ]
+    }
+  ]
 }

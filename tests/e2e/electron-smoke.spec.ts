@@ -1,3 +1,32 @@
-import {test,expect,_electron as electron} from '@playwright/test';
+import { test, expect, _electron as electron } from "@playwright/test";
 // This requires a real Electron binary/display. It never stands in for Windows acceptance.
-test('Electron starts with an isolated renderer and a limited bridge',async()=>{const app=await electron.launch({args:[...(process.platform==='linux'?['--no-sandbox','--ozone-platform=headless','--disable-gpu']:[]),'dist/main/index.cjs'],env:{...process.env,NODE_ENV:'test',XDG_CONFIG_HOME:'/tmp/planner-electron-config',XDG_CACHE_HOME:'/tmp/planner-electron-cache'}});try{const page=await app.firstWindow();await expect(page.getByRole('button',{name:'로그인',exact:true})).toBeVisible();expect(await page.evaluate(()=>typeof (window as any).require)).toBe('undefined');expect(await page.evaluate(()=>Object.keys(window.planner).includes('token'))).toBe(false);}finally{await app.close();}});
+test("Electron starts with an isolated renderer and a limited bridge", async () => {
+  const app = await electron.launch({
+    args: [
+      ...(process.platform === "linux"
+        ? ["--no-sandbox", "--disable-gpu"]
+        : []),
+      "dist/main/index.cjs",
+    ],
+    env: {
+      ...process.env,
+      NODE_ENV: "test",
+      XDG_CONFIG_HOME: "/tmp/planner-electron-config",
+      XDG_CACHE_HOME: "/tmp/planner-electron-cache",
+    },
+  });
+  try {
+    const page = await app.firstWindow();
+    await expect(
+      page.getByRole("button", { name: "로그인", exact: true }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => typeof (window as any).require)).toBe(
+      "undefined",
+    );
+    expect(
+      await page.evaluate(() => Object.keys(window.planner).includes("token")),
+    ).toBe(false);
+  } finally {
+    await app.close();
+  }
+});

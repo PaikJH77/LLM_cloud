@@ -1,2 +1,35 @@
-import {WebpackPlugin} from '@electron-forge/plugin-webpack';import {MakerSquirrel} from '@electron-forge/maker-squirrel';import mainConfig from './webpack.main.config';import rendererConfig from './webpack.renderer.config';
-export default {packagerConfig:{asar:true,name:'ProjectPlanner',appBundleId:'com.personal.projectplanner'},makers:[new MakerSquirrel({name:'ProjectPlanner',setupExe:'ProjectPlannerSetup.exe'},['win32'])],plugins:[new WebpackPlugin({mainConfig,renderer:{config:rendererConfig,entryPoints:[{name:'main_window',html:'./src/renderer/index.html',js:'./src/renderer/index.tsx',preload:{js:'./src/preload.ts'}}]},devContentSecurityPolicy:"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:3000; img-src 'self' data:"})]};
+import { WebpackPlugin } from "@electron-forge/plugin-webpack";
+import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import mainConfig from "./webpack.main.config";
+import rendererConfig from "./webpack.renderer.config";
+export default {
+  packagerConfig: {
+    asar: true,
+    name: "ProjectPlanner",
+    appBundleId: "com.personal.projectplanner",
+  },
+  makers: [
+    new MakerSquirrel(
+      { name: "ProjectPlanner", setupExe: "ProjectPlannerSetup.exe" },
+      ["win32"],
+    ),
+  ],
+  plugins: [
+    new WebpackPlugin({
+      mainConfig,
+      renderer: {
+        config: rendererConfig,
+        entryPoints: [
+          {
+            name: "main_window",
+            html: "./src/renderer/index.html",
+            js: "./src/renderer/index.tsx",
+            preload: { js: "./src/preload.ts" },
+          },
+        ],
+      },
+      devContentSecurityPolicy:
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:3000; img-src 'self' data:",
+    }),
+  ],
+};

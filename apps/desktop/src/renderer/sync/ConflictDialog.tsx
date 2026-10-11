@@ -1,2 +1,29 @@
-import type {SyncState} from './types';
-export function ConflictDialog({state,onResolve}:{state:SyncState;onResolve:(choice:'latest'|'reapply')=>void}){return <section role="dialog" aria-label="변경 충돌" className="conflict card"><h2>다른 PC의 변경을 확인하세요</h2><div className="compare"><div><h3>서버 최신 내용</h3><pre>{JSON.stringify(state.snapshot,null,2)}</pre></div><div><h3>내 변경안</h3><pre>{JSON.stringify(state.draft?.editedFields,null,2)}</pre></div></div><p>{state.error}</p><button onClick={()=>onResolve('latest')}>최신 내용 사용</button><button className="primary" onClick={()=>onResolve('reapply')}>내 변경안을 다시 적용</button></section>}
+import type { SyncState } from "./types";
+export function ConflictDialog({
+  state,
+  onResolve,
+}: {
+  state: SyncState;
+  onResolve: (choice: "latest" | "reapply") => void;
+}) {
+  return (
+    <section role="dialog" aria-label="변경 충돌" className="conflict card">
+      <h2>다른 PC의 변경을 확인하세요</h2>
+      <div className="compare">
+        <div>
+          <h3>서버 최신 내용</h3>
+          <pre>{JSON.stringify(state.snapshot, null, 2)}</pre>
+        </div>
+        <div>
+          <h3>내 변경안</h3>
+          <pre>{JSON.stringify(state.draft?.editedFields, null, 2)}</pre>
+        </div>
+      </div>
+      <p>{state.error}</p>
+      <button onClick={() => onResolve("latest")}>최신 내용 사용</button>
+      <button className="primary" onClick={() => onResolve("reapply")}>
+        내 변경안을 다시 적용
+      </button>
+    </section>
+  );
+}

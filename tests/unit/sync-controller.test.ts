@@ -1,21 +1,317 @@
-import {it,expect,vi} from 'vitest';import {createSyncController} from '../../apps/desktop/src/renderer/sync/controller';import type {Draft,Snapshot,PlannerGateway,Operation} from '../../packages/core/src/model';import {owner} from '../support/fixtures';
-const pid='33333333-3333-4333-8333-333333333333',tid='44444444-4444-4444-8444-444444444444';
-const snapshot=():Snapshot=>({project:{id:pid,ownerId:owner.ownerId,name:'Original',deadline:null,version:1,createdAt:'2026-01-01T00:00:00Z',updatedAt:'2026-01-01T00:00:00Z',archivedAt:null,deletedAt:null},tasks:[{id:tid,projectId:pid,name:'task',start:null,end:null,progress:null,position:0,createdAt:'2026-01-01T00:00:00Z',updatedAt:'2026-01-01T00:00:00Z',deletedAt:null,deletedByProjectRequestId:null}]});
-const op:Operation={type:'updateProject',fields:{name:'Mine',deadline:null}};
-function setup(){let current=snapshot(),calls:any[]=[],drafts:Draft[]=[],records=new Map();let offline=false,lost=false,storageFailure=false;const gateway:PlannerGateway={listProjects:async()=>[],getProject:async()=>{if(offline)throw Object.assign(new Error('offline'),{code:'offline'});return structuredClone(current)},requestStatus:async id=>{if(offline)throw Object.assign(new Error('offline'),{code:'offline'});return records.get(id)??null},mutate:async c=>{calls.push(c);if(offline)throw Object.assign(new Error('offline'),{code:'offline'});if(records.has(c.requestId))return records.get(c.requestId);let result:any;if(c.expectedVersion!==current.project.version)result={kind:'conflict',latest:structuredClone(current)};else {current.project.version++;if(c.operation.type==='updateProject')Object.assign(current.project,c.operation.fields);result={kind:'applied',snapshot:structuredClone(current)};}records.set(c.requestId,result);if(lost){lost=false;throw Object.assign(new Error('lost'),{code:'offline'});}return result;}};const store={save:async(d:Draft)=>{if(storageFailure)throw new Error('disk protection failed');drafts=[structuredClone(d)]},load:async()=>structuredClone(drafts),remove:async()=>{drafts=[]}};let interval=0;const clock={now:()=>new Date('2026-10-11T00:00:00Z'),setInterval:(_fn:any,ms:number)=>{interval=ms;return 1},clearInterval:()=>{}};const make=()=>createSyncController(gateway,store,clock,owner);return {make,gateway,store,get current(){return current},get calls(){return calls},get drafts(){return drafts},get interval(){return interval},offline:()=>offline=true,online:()=>offline=false,lose:()=>lost=true,failStorage:()=>storageFailure=true};}
-it('persists before sending, reports saving, locks further edits, then acknowledges',async()=>{const f=setup(),c=f.make();await c.open(pid);let release!:(x:any)=>void;const mutate=f.gateway.mutate;f.gateway.mutate=async command=>{expect(f.drafts[0].command).toEqual(command);await new Promise(r=>release=r);return mutate(command)};const p=c.commit(op);await vi.waitFor(()=>expect(c.state.status).toBe('saving'));await expect(c.edit({kind:'project',name:'Other',deadline:''})).rejects.toThrow();expect(c.state.status).not.toBe('saved');release(null);await p;expect(c.state.status).toBe('saved');expect(f.drafts).toEqual([]);expect(f.interval).toBeLessThanOrEqual(10000);c.dispose()});
-it('does not resend a committed request after lost response and restart',async()=>{const f=setup(),c=f.make();await c.open(pid);f.lose();await c.commit(op);expect(c.state.status).toBe('offline');expect(f.drafts[0].phase).toBe('unknown');c.dispose();const restored=f.make();await restored.open(pid);expect(f.calls).toHaveLength(1);expect(restored.state.snapshot?.project.name).toBe('Mine');expect(restored.state.status).toBe('saved');restored.dispose()});
-it('retries a genuinely unprocessed request with same id only after reconnect',async()=>{const f=setup(),c=f.make();await c.open(pid);f.offline();await c.commit(op);expect(c.state.status).toBe('offline');await expect(c.commit(op)).rejects.toThrow();f.online();await c.refresh();expect(f.calls).toHaveLength(2);expect(f.calls[1].requestId).toBe(f.calls[0].requestId);expect(c.state.status).toBe('saved');c.dispose()});
-it('preserves editing fields during refresh and reapplies only changed fields with a new request id',async()=>{const f=setup(),c=f.make();await c.open(pid);await c.edit({kind:'project',name:'Mine',deadline:''});f.current.project.version=2;f.current.project.deadline='2028-01-01';await c.refresh();expect(c.state.draft?.editedFields).toMatchObject({name:'Mine'});await c.commit(op);expect(c.state.status).toBe('conflict');const first=f.calls[0].requestId;await c.resolveConflict('reapply');expect(f.calls[1].requestId).not.toBe(first);expect(f.calls[1].expectedVersion).toBe(2);expect(f.current.project).toMatchObject({name:'Mine',deadline:'2028-01-01'});c.dispose()});
-it('does not reapply ordinary edits to remotely deleted/archived projects',async()=>{for(const field of ['deletedAt','archivedAt'] as const){const f=setup(),c=f.make();await c.open(pid);f.current.project.version=2;f.current.project[field]='2026-10-11T00:00:00Z';await c.commit(op);await c.resolveConflict('reapply');expect(f.calls).toHaveLength(1);expect(c.state.status).toBe('conflict');await c.resolveConflict('latest');expect(f.drafts).toEqual([]);c.dispose()}});
-it('blocks sends on draft protection failure and hides drafts after authentication expiry',async()=>{const f=setup(),c=f.make();await c.open(pid);f.failStorage();await c.commit(op);expect(c.state.status).toBe('failed');expect(f.calls).toHaveLength(0);c.dispose();const g=setup(),d=g.make();await d.open(pid);await d.edit({kind:'project',name:'secret',deadline:''});g.gateway.getProject=async()=>{throw Object.assign(new Error('expired'),{code:'expired'})};await d.refresh();expect(d.state.status).toBe('expired');expect(d.state.snapshot).toBeNull();expect(d.state.draft).toBeNull();expect(g.drafts).toHaveLength(1);d.dispose()});
-it('does not let a stale refresh start a second mutation or delete a newer draft',async()=>{
- const f=setup(),c=f.make();await c.open(pid);const originalRead=f.gateway.getProject,originalMutate=f.gateway.mutate;let releaseRead!:()=>void,releaseMutation!:()=>void;let firstRead=true,mutations=0;
- f.gateway.getProject=async id=>{if(firstRead){firstRead=false;await new Promise<void>(r=>releaseRead=r)}return originalRead(id)};
- f.gateway.mutate=async command=>{mutations++;await new Promise<void>(r=>releaseMutation=r);return originalMutate(command)};
- const refresh=c.refresh();await vi.waitFor(()=>expect(releaseRead).toBeTypeOf('function'));const save=c.commit(op);await vi.waitFor(()=>expect(mutations).toBe(1));releaseRead();await vi.waitFor(()=>expect(c.state.status).toBe('saving'));await new Promise(r=>setTimeout(r,20));expect(mutations).toBe(1);releaseMutation();await Promise.all([save,refresh]);await c.edit({kind:'project',name:'new unsaved',deadline:''});expect(f.drafts[0].editedFields).toMatchObject({name:'new unsaved'});c.dispose();
+import { it, expect, vi } from "vitest";
+import { createSyncController } from "../../apps/desktop/src/renderer/sync/controller";
+import type {
+  Draft,
+  Snapshot,
+  PlannerGateway,
+  Operation,
+} from "../../packages/core/src/model";
+import { owner } from "../support/fixtures";
+const pid = "33333333-3333-4333-8333-333333333333",
+  tid = "44444444-4444-4444-8444-444444444444";
+const snapshot = (): Snapshot => ({
+  project: {
+    id: pid,
+    ownerId: owner.ownerId,
+    name: "Original",
+    deadline: null,
+    version: 1,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    archivedAt: null,
+    deletedAt: null,
+  },
+  tasks: [
+    {
+      id: tid,
+      projectId: pid,
+      name: "task",
+      start: null,
+      end: null,
+      progress: null,
+      position: 0,
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      deletedAt: null,
+      deletedByProjectRequestId: null,
+    },
+  ],
 });
-it('hides drafts when authentication expires during conflict resolution or transmission',async()=>{
- const f=setup(),c=f.make();await c.open(pid);f.current.project.version=2;await c.commit(op);f.gateway.getProject=async()=>{throw Object.assign(new Error('expired'),{code:'expired'})};await c.resolveConflict('latest');expect(c.state.status).toBe('expired');expect(c.state.draft).toBeNull();c.dispose();
- const g=setup(),d=g.make();await d.open(pid);g.gateway.mutate=async()=>{throw Object.assign(new Error('expired'),{code:'expired'})};await d.commit(op);expect(d.state.status).toBe('expired');expect(d.state.draft).toBeNull();expect(g.drafts).toHaveLength(1);d.dispose();
+const op: Operation = {
+  type: "updateProject",
+  fields: { name: "Mine", deadline: null },
+};
+function setup() {
+  let current = snapshot(),
+    calls: any[] = [],
+    drafts: Draft[] = [],
+    records = new Map();
+  let offline = false,
+    lost = false,
+    storageFailure = false;
+  const gateway: PlannerGateway = {
+    listProjects: async () => [],
+    getProject: async () => {
+      if (offline)
+        throw Object.assign(new Error("offline"), { code: "offline" });
+      return structuredClone(current);
+    },
+    requestStatus: async (id) => {
+      if (offline)
+        throw Object.assign(new Error("offline"), { code: "offline" });
+      return records.get(id) ?? null;
+    },
+    mutate: async (c) => {
+      calls.push(c);
+      if (offline)
+        throw Object.assign(new Error("offline"), { code: "offline" });
+      if (records.has(c.requestId)) return records.get(c.requestId);
+      let result: any;
+      if (c.expectedVersion !== current.project.version)
+        result = { kind: "conflict", latest: structuredClone(current) };
+      else {
+        current.project.version++;
+        if (c.operation.type === "updateProject")
+          Object.assign(current.project, c.operation.fields);
+        result = { kind: "applied", snapshot: structuredClone(current) };
+      }
+      records.set(c.requestId, result);
+      if (lost) {
+        lost = false;
+        throw Object.assign(new Error("lost"), { code: "offline" });
+      }
+      return result;
+    },
+  };
+  const store = {
+    save: async (d: Draft) => {
+      if (storageFailure) throw new Error("disk protection failed");
+      drafts = [structuredClone(d)];
+    },
+    load: async () => structuredClone(drafts),
+    remove: async () => {
+      drafts = [];
+    },
+  };
+  let interval = 0;
+  const clock = {
+    now: () => new Date("2026-10-11T00:00:00Z"),
+    setInterval: (_fn: any, ms: number) => {
+      interval = ms;
+      return 1;
+    },
+    clearInterval: () => {},
+  };
+  const make = () => createSyncController(gateway, store, clock, owner);
+  return {
+    make,
+    gateway,
+    store,
+    get current() {
+      return current;
+    },
+    get calls() {
+      return calls;
+    },
+    get drafts() {
+      return drafts;
+    },
+    get interval() {
+      return interval;
+    },
+    offline: () => (offline = true),
+    online: () => (offline = false),
+    lose: () => (lost = true),
+    failStorage: () => (storageFailure = true),
+  };
+}
+it("persists before sending, reports saving, locks further edits, then acknowledges", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  let release!: (x: any) => void;
+  const mutate = f.gateway.mutate;
+  f.gateway.mutate = async (command) => {
+    expect(f.drafts[0].command).toEqual(command);
+    await new Promise((r) => (release = r));
+    return mutate(command);
+  };
+  const p = c.commit(op);
+  await vi.waitFor(() => expect(c.state.status).toBe("saving"));
+  await expect(
+    c.edit({ kind: "project", name: "Other", deadline: "" }),
+  ).rejects.toThrow();
+  expect(c.state.status).not.toBe("saved");
+  release(null);
+  await p;
+  expect(c.state.status).toBe("saved");
+  expect(f.drafts).toEqual([]);
+  expect(f.interval).toBeLessThanOrEqual(10000);
+  c.dispose();
+});
+it("does not resend a committed request after lost response and restart", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  f.lose();
+  await c.commit(op);
+  expect(c.state.status).toBe("offline");
+  expect(f.drafts[0].phase).toBe("unknown");
+  c.dispose();
+  const restored = f.make();
+  await restored.open(pid);
+  expect(f.calls).toHaveLength(1);
+  expect(restored.state.snapshot?.project.name).toBe("Mine");
+  expect(restored.state.status).toBe("saved");
+  restored.dispose();
+});
+it("retries a genuinely unprocessed request with same id only after reconnect", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  f.offline();
+  await c.commit(op);
+  expect(c.state.status).toBe("offline");
+  await expect(c.commit(op)).rejects.toThrow();
+  f.online();
+  await c.refresh();
+  expect(f.calls).toHaveLength(2);
+  expect(f.calls[1].requestId).toBe(f.calls[0].requestId);
+  expect(c.state.status).toBe("saved");
+  c.dispose();
+});
+it("preserves editing fields during refresh and reapplies only changed fields with a new request id", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  await c.edit({ kind: "project", name: "Mine", deadline: "" });
+  f.current.project.version = 2;
+  f.current.project.deadline = "2028-01-01";
+  await c.refresh();
+  expect(c.state.draft?.editedFields).toMatchObject({ name: "Mine" });
+  await c.commit(op);
+  expect(c.state.status).toBe("conflict");
+  const first = f.calls[0].requestId;
+  await c.resolveConflict("reapply");
+  expect(f.calls[1].requestId).not.toBe(first);
+  expect(f.calls[1].expectedVersion).toBe(2);
+  expect(f.current.project).toMatchObject({
+    name: "Mine",
+    deadline: "2028-01-01",
+  });
+  c.dispose();
+});
+it("does not reapply ordinary edits to remotely deleted/archived projects", async () => {
+  for (const field of ["deletedAt", "archivedAt"] as const) {
+    const f = setup(),
+      c = f.make();
+    await c.open(pid);
+    f.current.project.version = 2;
+    f.current.project[field] = "2026-10-11T00:00:00Z";
+    await c.commit(op);
+    await c.resolveConflict("reapply");
+    expect(f.calls).toHaveLength(1);
+    expect(c.state.status).toBe("conflict");
+    await c.resolveConflict("latest");
+    expect(f.drafts).toEqual([]);
+    c.dispose();
+  }
+});
+it("blocks sends on draft protection failure and hides drafts after authentication expiry", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  f.failStorage();
+  await c.commit(op);
+  expect(c.state.status).toBe("failed");
+  expect(f.calls).toHaveLength(0);
+  c.dispose();
+  const g = setup(),
+    d = g.make();
+  await d.open(pid);
+  await d.edit({ kind: "project", name: "secret", deadline: "" });
+  g.gateway.getProject = async () => {
+    throw Object.assign(new Error("expired"), { code: "expired" });
+  };
+  await d.refresh();
+  expect(d.state.status).toBe("expired");
+  expect(d.state.snapshot).toBeNull();
+  expect(d.state.draft).toBeNull();
+  expect(g.drafts).toHaveLength(1);
+  d.dispose();
+});
+it("does not let a stale refresh start a second mutation or delete a newer draft", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  const originalRead = f.gateway.getProject,
+    originalMutate = f.gateway.mutate;
+  let releaseRead!: () => void, releaseMutation!: () => void;
+  let firstRead = true,
+    mutations = 0;
+  f.gateway.getProject = async (id) => {
+    if (firstRead) {
+      firstRead = false;
+      await new Promise<void>((r) => (releaseRead = r));
+    }
+    return originalRead(id);
+  };
+  f.gateway.mutate = async (command) => {
+    mutations++;
+    await new Promise<void>((r) => (releaseMutation = r));
+    return originalMutate(command);
+  };
+  const refresh = c.refresh();
+  await vi.waitFor(() => expect(releaseRead).toBeTypeOf("function"));
+  const save = c.commit(op);
+  await vi.waitFor(() => expect(mutations).toBe(1));
+  releaseRead();
+  await vi.waitFor(() => expect(c.state.status).toBe("saving"));
+  await new Promise((r) => setTimeout(r, 20));
+  expect(mutations).toBe(1);
+  releaseMutation();
+  await Promise.all([save, refresh]);
+  await c.edit({ kind: "project", name: "new unsaved", deadline: "" });
+  expect(f.drafts[0].editedFields).toMatchObject({ name: "new unsaved" });
+  c.dispose();
+});
+it("hides drafts when authentication expires during conflict resolution or transmission", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  f.current.project.version = 2;
+  await c.commit(op);
+  f.gateway.getProject = async () => {
+    throw Object.assign(new Error("expired"), { code: "expired" });
+  };
+  await c.resolveConflict("latest");
+  expect(c.state.status).toBe("expired");
+  expect(c.state.draft).toBeNull();
+  c.dispose();
+  const g = setup(),
+    d = g.make();
+  await d.open(pid);
+  g.gateway.mutate = async () => {
+    throw Object.assign(new Error("expired"), { code: "expired" });
+  };
+  await d.commit(op);
+  expect(d.state.status).toBe("expired");
+  expect(d.state.draft).toBeNull();
+  expect(g.drafts).toHaveLength(1);
+  d.dispose();
+});
+it("locks immediately on offline notification and preserves edits until reconnection", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  await c.edit({ kind: "project", name: "preserved", deadline: "" });
+  c.connectionChanged(false);
+  expect(c.state.status).toBe("offline");
+  await expect(
+    c.edit({ kind: "project", name: "blocked", deadline: "" }),
+  ).rejects.toThrow();
+  expect(f.drafts[0].editedFields).toMatchObject({ name: "preserved" });
+  await c.connectionChanged(true);
+  expect(c.state.status).toBe("editing");
+  c.dispose();
 });
