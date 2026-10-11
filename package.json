@@ -17,11 +17,18 @@
     "services": "tsx scripts/test-services.ts",
     "dev:api": "tsx apps/api/src/start.ts",
     "dev:ui": "tsx tests/support/web-harness.ts",
-    "dev:desktop": "cd apps/desktop && electron-forge start"
+    "dev:desktop": "cd apps/desktop && electron-forge start",
+    "build:web": "tsx scripts/build-web.ts",
+    "test:web:unit": "vitest run --project web",
+    "dev:web": "tsx src/server.ts",
+    "migrate:web": "tsx scripts/migrate.ts"
   },
   "dependencies": {
+    "@fastify/static": "10.1.6",
+    "@vercel/functions": "3.9.11",
     "fastify": "5.12.5",
     "jose": "6.2.12",
+    "oidc-client-ts": "3.5.0",
     "pg": "8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -40,6 +47,7 @@
     "css-loader": "^7.1.0",
     "electron": "44.7.0",
     "electron-squirrel-startup": "^1.0.1",
+    "fake-indexeddb": "6.2.5",
     "html-webpack-plugin": "^5.6.0",
     "prettier": "3.9.10",
     "style-loader": "^4.0.0",
