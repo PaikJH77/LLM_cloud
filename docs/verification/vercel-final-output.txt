@@ -1,0 +1,198 @@
+
+> personal-project-planner@0.1.0 typecheck
+> tsc --noEmit
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 build:web
+> tsx scripts/build-web.ts
+
+asset assets/app.16d11cd2a73e273b9f1f.js 420 KiB [emitted] [immutable] [minimized] (name: main) 1 related asset
+asset index.html 259 bytes [emitted] [compared for emit] [minimized]
+
+WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
+This can impact web performance.
+Assets: 
+  assets/app.16d11cd2a73e273b9f1f.js (420 KiB)
+    Largest modules: ./apps/web/src/client/index.tsx + 55 modules (1.18 MiB), ./node_modules/css-loader/dist/cjs.js!./apps/desktop/src/renderer/styles.css (9.12 KiB), ./node_modules/css-loader/dist/runtime/api.js (2.25 KiB)
+
+WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
+Entrypoints:
+  main (420 KiB)
+      assets/app.16d11cd2a73e273b9f1f.js
+
+WARNING in webpack performance recommendations: 
+You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
+For more info visit https://webpack.js.org/guides/code-splitting/
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test
+> npm run test:unit && npm run test:api
+
+
+> personal-project-planner@0.1.0 test:unit
+> vitest run --project unit
+
+
+ RUN  v5.0.3 /workspace/LLM_cloud
+
+
+ Test Files  6 passed (6)
+      Tests  35 passed (35)
+   Start at  10:05:39
+   Duration  548ms (import 41%, transform 29%, tests 27%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test:api
+> vitest run --project api
+
+
+ RUN  v5.0.3 /workspace/LLM_cloud
+
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  10:05:40
+   Duration  1.35s (tests 72%, import 19%, transform 8%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test:web:unit
+> vitest run --project web
+
+
+ RUN  v5.0.3 /workspace/LLM_cloud
+
+
+ Test Files  8 passed (8)
+      Tests  18 passed (18)
+   Start at  10:05:42
+   Duration  4.49s (tests 82%, import 13%, transform 4%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test:web:ui
+> playwright test -c playwright.web.config.ts
+
+[WebServer] (node:65757) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:65770) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:65781) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 1 worker
+
+(node:65794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/web/browser-restart.spec.ts:8:1 › SIGKILL browser restart restores IDB ciphertext only after same-owner online login (2.6s)
+  ✓   2 tests/web/login.spec.ts:3:1 › actual browser PKCE login, memory tokens, API ownership and logout (1.0s)
+  ✓   3 tests/web/login.spec.ts:27:1 › other valid Keycloak account is refused (740ms)
+  ✓   4 tests/web/login.spec.ts:36:1 › forged callback is rejected and callback parameters are removed from history (257ms)
+  ✓   5 tests/web/login.spec.ts:48:1 › token expiration clears the screen and prevents using old memory keys (793ms)
+  ✓   6 tests/web/real-sync.spec.ts:4:1 › two actual browser clients see changes and enforce atomic conflict and replay (1.8s)
+  ✓   7 tests/web/real-sync.spec.ts:74:1 › response loss after real commit recovers the original request without duplicate project (1.2s)
+  ✓   8 tests/web/real-sync.spec.ts:108:1 › offline locks editing and a new tab restores encrypted unsent draft after login (1.5s)
+  ✓   9 tests/web/real-sync.spec.ts:142:1 › cross-tab logout immediately removes projects and recovered plaintext (1.4s)
+  ✓  10 tests/web/real-sync.spec.ts:158:1 › discard logout deletes only this tab's draft and preserves the other tab for re-login (2.0s)
+  ✓  11 tests/web/ui.spec.ts:17:1 › table dates, inclusive bars, move, resize and Escape share one calendar model (1.5s)
+  ✓  12 tests/web/ui.spec.ts:71:1 › undated tasks have no bar, archive locks dates, day step works on weekly axis (1.2s)
+  ✓  13 tests/web/ui.spec.ts:92:1 › project-first navigation, IME, editing, archive, trash and restore (1.4s)
+
+  13 passed (19.2s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test:ui
+> playwright test --project=ui
+
+[WebServer] (node:66851) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:66865) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:66894) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] <i> [webpack-dev-server] Project is running at:
+[WebServer] <i> [webpack-dev-server] Loopback: http://127.0.0.1:4317/
+[WebServer] <i> [webpack-dev-server] Content not from webpack is served from '/workspace/LLM_cloud/public' directory
+[WebServer] <i> [webpack-dev-middleware] wait until bundle finished: /
+
+Running 6 tests using 1 worker
+
+(node:66907) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [ui] › tests/ui/gantt.spec.ts:16:1 › table dates, inclusive bars, move, resize and Escape share one calendar model (1.0s)
+  ✓  2 [ui] › tests/ui/gantt.spec.ts:67:1 › undated tasks have no bar, archive locks dates, day step works on weekly axis (917ms)
+  ✓  3 [ui] › tests/ui/gantt.spec.ts:88:1 › remote refresh cancels an active drag without overwriting newer dates (736ms)
+  ✓  4 [ui] › tests/ui/projects.spec.ts:5:1 › project-first navigation, IME, editing, archive, trash and restore (887ms)
+  ✓  5 [ui] › tests/ui/projects.spec.ts:50:1 › shows null deadlines, progress completeness and locked state after disconnect (651ms)
+  ✓  6 [ui] › tests/ui/projects.spec.ts:67:1 › invalid task draft cannot be overwritten by another editor and offline event locks immediately (718ms)
+
+  6 passed (7.9s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> personal-project-planner@0.1.0 test:e2e
+> playwright test --project=e2e
+
+[WebServer] (node:67318) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:67332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:67343) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] <i> [webpack-dev-server] Project is running at:
+[WebServer] <i> [webpack-dev-server] Loopback: http://127.0.0.1:4317/
+[WebServer] <i> [webpack-dev-server] Content not from webpack is served from '/workspace/LLM_cloud/public' directory
+[WebServer] <i> [webpack-dev-middleware] wait until bundle finished: /
+
+Running 6 tests using 1 worker
+
+(node:67376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [e2e] › tests/e2e/electron-smoke.spec.ts:3:1 › Electron starts with an isolated renderer and a limited bridge (370ms)
+  ✓  2 [e2e] › tests/e2e/real-sync.spec.ts:121:1 › real browser OIDC authorization code + PKCE login verifies state and nonce (589ms)
+  ✓  3 [e2e] › tests/e2e/real-sync.spec.ts:136:1 › two independent real service UI clients see committed changes; third owner cannot read (1.2s)
+  ✓  4 [e2e] › tests/e2e/real-sync.spec.ts:181:1 › real API conflict, lost response, protected restart recovery and API restart (250ms)
+  ✓  5 [e2e] › tests/e2e/real-sync.spec.ts:246:1 › real unprocessed network failure retries once and remote archive prevents stale reapply (216ms)
+  ✓  6 [e2e] › tests/e2e/real-sync.spec.ts:287:1 › protected draft survives forced client-process termination and requires same authenticated account (440ms)
+
+  6 passed (6.4s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

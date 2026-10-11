@@ -36,6 +36,8 @@ npm run dev:web:test
 | `PORT` | 로컬 실행 port. 기본 3000 |
 | `PLANNER_LOCAL_TEST` | 루프백 HTTP/비TLS DB 시험 전용 `1`. 운영에서 설정하지 않음 |
 
+PostgreSQL URL의 `sslmode` 등 SSL query override는 거부한다. URL에서 해당 옵션을 제거하고 pool의 `rejectUnauthorized: true` 설정을 사용한다. 제공처별 CA 요구사항은 실제 연결 전에 검증한다.
+
 프런트엔드에는 issuer/client ID/audience만 `/config`로 제공된다. DB URL·master key는 웹 빌드에 주입하지 않는다. API는 Vercel cookie와 별개로 Bearer JWT 및 한 소유자를 검사한다. 토큰은 메모리에만 보관하므로 새 탭·새로고침·브라우저 재시작 시 다시 로그인한다. OIDC 로그인 상태/verifier만 sessionStorage에 짧게 두고 callback/실패 경로에서 정리한다. 로그인 제공처의 SSO 세션은 앱의 로컬 로그아웃과 별개다.
 
 Migration은 요청·startup·build에서 실행하지 않는다:
