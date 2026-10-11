@@ -16,3 +16,8 @@ Approved source snapshots are stored unchanged. Repository baseline: 1b4e8c7; no
 2–9. Pending.
 
 Task 1: complete. RED: domain imports absent (plan-specified missing implementation); GREEN: 16 tests in UTC, Asia/Seoul and America/Los_Angeles. `npm run typecheck` passed. Node 24.19.0 LTS; resolved dependency versions captured in lockfile. See /tmp/planner-domain-*.log in this session.
+
+Task 1 independent review: no blocking defects. Reviewer confirmed 16 tests across three time zones/typecheck. Creation-base/permutation checks are enforced and tested in Task 2. Minor test improvement (past task dates) deferred to final suite.
+Task 2: complete. RED: missing persistence modules. GREEN: 6 real PostgreSQL tests, including 8 concurrent identical requests, version races, deletion provenance, owner scope and invalid permutations; typecheck and full current suite pass. Persistent replay after actual DB restart passed (`scripts/check-db-restart.ts`).
+Task 2 Ruling: use relational project/task/request identities with JSONB domain payloads, rather than duplicate each serialized field into SQL columns; all mutations validate server-side and transactionally persist version and payload together. Cost: future SQL reporting may need expression indexes or a migration.
+Task 2 regression: concurrent snapshot reads returned task version 4 with project version 3 (RED). One SQL aggregate snapshot fixed it (GREEN). Dedup test uses structural JSON equality because JSONB intentionally reorders object keys.
