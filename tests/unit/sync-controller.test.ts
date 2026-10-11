@@ -315,3 +315,37 @@ it("locks immediately on offline notification and preserves edits until reconnec
   expect(c.state.status).toBe("editing");
   c.dispose();
 });
+it("never transmits a draft after protection failure during automatic refresh", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  f.failStorage();
+  await c.commit(op);
+  await c.refresh();
+  expect(f.calls).toHaveLength(0);
+  expect(c.state.status).toBe("failed");
+  c.dispose();
+});
+it("disposed conflict resolution cannot erase a replacement controller's draft", async () => {
+  const f = setup(),
+    c = f.make();
+  await c.open(pid);
+  await c.edit({ kind: "project", name: "old", deadline: "" });
+  const read = f.gateway.getProject;
+  let release!: () => void;
+  f.gateway.getProject = async (id) => {
+    await new Promise<void>((r) => (release = r));
+    return read(id);
+  };
+  const resolution = c.resolveConflict("latest");
+  await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+  c.dispose();
+  f.gateway.getProject = read;
+  const replacement = f.make();
+  await replacement.open(pid);
+  await replacement.edit({ kind: "project", name: "new", deadline: "" });
+  release();
+  await resolution;
+  expect(f.drafts[0]?.editedFields).toMatchObject({ name: "new" });
+  replacement.dispose();
+});

@@ -28,6 +28,7 @@ export function GanttChart({
     [error, setError] = useState("");
   const drag = useRef<{
     x: number;
+    version: number;
     kind: "move" | "start" | "end";
     task: Task;
     range: DateRange | null;
@@ -49,6 +50,13 @@ export function GanttChart({
       setPreview(null);
     }
   }, [disabled]);
+  useEffect(() => {
+    if (drag.current && drag.current.version !== snapshot.project.version) {
+      drag.current = null;
+      setPreview(null);
+      setError("다른 PC에서 변경되어 드래그를 취소했습니다");
+    }
+  }, [snapshot.project.version]);
   if (!task?.start || !task.end || task.deletedAt)
     return <div className="gantt-empty">일정 미정</div>;
   const range = preview ?? { start: task.start, end: task.end },
@@ -72,6 +80,7 @@ export function GanttChart({
       e.currentTarget.setPointerCapture(e.pointerId);
       drag.current = {
         x: e.clientX,
+        version: snapshot.project.version,
         kind,
         task,
         range: { start: task.start!, end: task.end! },
@@ -98,6 +107,10 @@ export function GanttChart({
       const d = drag.current;
       drag.current = null;
       setPreview(null);
+      if (d && d.version !== snapshot.project.version) {
+        setError("다른 PC에서 변경되어 드래그를 취소했습니다");
+        return;
+      }
       if (
         d?.range &&
         (d.range.start !== task.start || d.range.end !== task.end)

@@ -237,6 +237,16 @@ export function createSyncController(
       )
         return;
       const draft = state.draft;
+      // A failed protected write must never be bypassed by polling/reconnect.
+      if (draft) {
+        try {
+          await persist(draft);
+        } catch (e) {
+          if (!disposed && revision === epoch) fail(e, true);
+          return;
+        }
+        if (disposed || revision !== epoch) return;
+      }
       emit({
         snapshot: latest,
         lastConfirmedAt: clock.now().toISOString(),
@@ -384,10 +394,11 @@ export function createSyncController(
         !["conflict", "editing", "failed"].includes(state.status)
       )
         return;
-      revision++;
+      const epoch = ++revision;
       emit({ status: "saving" });
       try {
         const latest = await gateway.getProject(projectId);
+        if (disposed || revision !== epoch) return;
         if (choice === "latest") {
           await store.remove(key, projectId);
           emit({
@@ -414,6 +425,7 @@ export function createSyncController(
         });
         await controller.commit(op);
       } catch (e) {
+        if (disposed || revision !== epoch) return;
         if ((e as { code?: string }).code) fail(e);
         else
           emit({

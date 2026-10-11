@@ -12,8 +12,7 @@ Approved source snapshots are stored unchanged. Repository baseline: 1b4e8c7; no
 - Ruling: source skill helper scripts are not installed in this checkout; maintain task briefs, RED/GREEN logs and this ledger directly, with equivalent task/commit gates.
 
 ## Status
-1. In progress: domain contracts and calculations.
-2–9. Pending.
+Tasks 1–8 implemented and locally verified. Task 9 preparation complete; actual Windows acceptance BLOCKED. See final results for current counts.
 
 Task 1: complete. RED: domain imports absent (plan-specified missing implementation); GREEN: 16 tests in UTC, Asia/Seoul and America/Los_Angeles. `npm run typecheck` passed. Node 24.19.0 LTS; resolved dependency versions captured in lockfile. See /tmp/planner-domain-*.log in this session.
 
@@ -36,3 +35,6 @@ Task 7 additional fixes: stale IPC response cannot terminate new account; expire
 Task 8: Linux service integration implemented and verified. 33 unit, 11 real API/DB, 5 mock UI, 6 E2E tests PASS; typecheck and production bundles PASS. E2E includes actual browser PKCE, two real-service renderer clients, foreign owner rejection, simultaneous conflict, before/after request network failures, API restart and forced client-process termination after protected save. The process crash fixture runs the real controller/draft store in Node; it is not Windows Electron crash/DPAPI evidence.
 Task 8 Ruling: test realm's loopback redirect wildcard must end at `http://127.0.0.1:*`; the original wildcard-in-middle pattern was rejected by real Keycloak. This is test-only configuration. Production client registration still needs provider-specific approval and verification.
 Task 9: preparation complete; Windows execution BLOCKED. `scripts/verify-windows.ts` returned exit 2 on Linux as intended. No Windows installer, checksum or lifecycle PASS claim has been fabricated. See docs/windows-verification.md.
+
+Final independent review (fresh reviewer, base 1b4e8c7): 3 Important, no Critical findings. Two controller races independently reproduced by reviewer, Gantt race identified by inspection. One final fix pass added failing controller/UI regressions then fixed (1) every refresh retry protects its draft before any eligible send, (2) disposed/revised conflict cancellation cannot remove a replacement draft, (3) a project-version change cancels an active pointer drag with an explicit notice; no stale dates are committed against the new version. Final UI regression demonstrates remote refresh during drag leaves remote dates intact with zero extra requests. This conservative cancellation is intentional; the user can begin a fresh drag against current data.
+Forge Linux x64 packaging succeeded using the actual Electron binary. This is Linux package/build evidence only; no Windows installer was produced or tested. Production dependency audit reported zero vulnerabilities at execution time.

@@ -84,3 +84,32 @@ test("undated tasks have no bar, archive locks dates, day step works on weekly a
   await page.getByRole("button", { name: "보관", exact: true }).click();
   await expect(page.getByLabel("실험 시작일", { exact: true })).toBeDisabled();
 });
+
+test("remote refresh cancels an active drag without overwriting newer dates", async ({
+  page,
+}) => {
+  await setup(page);
+  const bar = page.getByRole("button", { name: "실험 막대 이동" });
+  await bar.scrollIntoViewIfNeeded();
+  const box = (await bar.boundingBox())!;
+  const before = await page.evaluate(() =>
+    (window as any).mockControls.requests(),
+  );
+  await page.mouse.move(box.x + box.width / 2, box.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 32, box.y + 10);
+  await page.evaluate(() => {
+    (window as any).mockControls.remoteDates();
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(page.getByLabel("실험 시작일", { exact: true })).toHaveValue(
+    "2028-03-10",
+  );
+  await page.mouse.up();
+  await expect(
+    page.getByText("다른 PC에서 변경되어 드래그를 취소했습니다"),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => (window as any).mockControls.requests()),
+  ).toBe(before);
+});

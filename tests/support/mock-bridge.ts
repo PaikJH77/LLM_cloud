@@ -21,6 +21,12 @@ export function mockBridge(): PlannerBridge {
   (window as any).mockControls = {
     offline: (value: boolean) => (offline = value),
     requests: () => requests.size,
+    remoteDates: () => {
+      const s = [...data.values()][0];
+      s.project.version++;
+      s.tasks[0].start = "2028-03-10";
+      s.tasks[0].end = "2028-03-12";
+    },
   };
   const online = () => {
     if (offline)
