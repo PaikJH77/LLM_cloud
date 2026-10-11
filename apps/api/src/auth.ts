@@ -9,6 +9,7 @@ export interface AuthConfig {
   audience: string;
   allowLoopbackHttp?: boolean;
   now?: () => Date;
+  authorize?: (issuer: string, subject: string) => void;
 }
 export function secureUrl(value: string, allowLoopbackHttp = false): URL {
   const u = new URL(value);
@@ -57,6 +58,7 @@ export async function createAuthenticator(
     });
     if (typeof payload.sub !== "string" || !payload.sub)
       throw new AuthenticationError("Subject required");
+    config.authorize?.(config.issuer, payload.sub);
     const r = await config.db.query(
       "INSERT INTO principals(id,issuer,subject) VALUES($1,$2,$3) ON CONFLICT(issuer,subject) DO UPDATE SET issuer=EXCLUDED.issuer RETURNING id",
       [randomUUID(), config.issuer, payload.sub],
