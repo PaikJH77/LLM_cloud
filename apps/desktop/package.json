@@ -1,0 +1,1 @@
+{"name":"personal-project-planner-desktop","productName":"Project Planner","version":"0.1.0","description":"Personal project planner","author":"Personal Planner","private":true,"main":".webpack/main/index.js","config":{"forge":"./forge.config.ts"},"devDependencies":{"electron":"44.7.0"}}

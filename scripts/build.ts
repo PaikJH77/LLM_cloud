@@ -1,0 +1,6 @@
+import webpack from 'webpack';import HtmlWebpackPlugin from 'html-webpack-plugin';import {resolve} from 'node:path';import {rendererConfig as renderer} from '../apps/desktop/webpack.renderer.config';import {mainConfig as main} from '../apps/desktop/webpack.main.config';
+const root=resolve('apps/desktop');
+const configs:webpack.Configuration[]=[{...renderer,mode:'production',context:root,target:'web',entry:'./src/renderer/index.tsx',output:{path:resolve('dist/renderer'),filename:'app.js',clean:true},plugins:[new HtmlWebpackPlugin({template:resolve(root,'src/renderer/index.html')})]},
+ {...main,mode:'production',context:root,target:'electron-main',output:{path:resolve('dist/main'),filename:'index.cjs'},plugins:[new webpack.DefinePlugin({MAIN_WINDOW_WEBPACK_ENTRY:"require('node:url').pathToFileURL(require('node:path').join(__dirname,'../renderer/index.html')).href",MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY:"require('node:path').join(__dirname,'preload.cjs')"})]},
+ {...main,mode:'production',context:root,target:'electron-preload',entry:'./src/preload.ts',output:{path:resolve('dist/main'),filename:'preload.cjs'}}];
+await new Promise<void>((res,rej)=>webpack(configs,(error,stats)=>{if(error)return rej(error);console.log(stats?.toString({colors:false,all:false,errors:true,warnings:true,assets:true}));if(stats?.hasErrors())return rej(new Error('Build failed'));res();}));
